@@ -29,25 +29,11 @@ def getText(text, comment, link):
 	if not text:
 		return comment
 	return text + '\n\ncomment: ' + comment
-	
-def dedupText(text):
-	# fix to the library's bug
-	existing = set()
-	result = []
-	for line in text.split('\n'):
-		if not line: 
-			result.append(line)
-			continue
-		if line in existing:
-			return ''.join(result).strip()
-		existing.add(line)
-		result.append(line)
-	return ''.join(result).strip()
 
 def get(content):
     result = Result()
     result.url = content['post_url']
-    result.video = content['video']
-    result.cap_html_v2 = dedupText(getText((content['post_text'] or '').strip(), content['shared_text'], content.get('link')))
-    result.imgs = list(dedup(content['images'] or []))
+    result.video = content.get('video_url')
+    result.cap_html_v2 = content['summary'] # may need to add later
+    # result.imgs = list(dedup(content['images'] or [])) # todo
     return result
