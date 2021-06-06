@@ -24,11 +24,15 @@ def preDownload(img):
 		return
 	downloader.download(img, filename, silent=True)
 
+def getText(content):
+	soup = BeautifulSoup(content, 'html.parser')
+	return soup.getText(separator='\n\n').strip('\u200b').strip()
+
 def get(content):
     result = Result()
     result.url = content['post_url']
     result.video = content.get('video_url')
-    result.cap_html_v2 = content['summary'] # may need to add later
+    result.cap_html_v2 = getText(content.get('caption', '')) or content['summary']
     result.imgs = list(getImgsJson(content.get('photos', []))) or list(getImgs(content.get('body', '')))
     for img in result.imgs:
     	preDownload(img)
