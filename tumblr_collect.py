@@ -34,6 +34,8 @@ def tryPost(channel, post, sub_setting):
 	url = post['post_url']
 	if existing.contain(url):
 		return
+	with open('tmp_post', 'w') as f:
+		f.write('%s\n\n%s' % (url, str(post)))
 	album = to_album.get(post)
 	with open('tmp_post', 'w') as f:
 		f.write('%s\n\n%s\n\n%s' % (url, str(album), str(post)))
@@ -44,7 +46,7 @@ def tryPost(channel, post, sub_setting):
 		with open('tmp_failed_post', 'w') as f:
 			f.write('%s\n\n%s\n\n%s\n\n%s' % (url, str(e), str(album), str(post)))
 		return
-	existing.add(url)
+	# existing.add(url)
 
 def getPostIds(soup, sub_setting):
 	for url in soup.find_all('a', href=True):
