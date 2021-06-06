@@ -30,17 +30,19 @@ client = pytumblr.TumblrRestClient(
     credential['token_secret'],
 )
 
-def tryPost(channel, album):
-	if existing.contain(album.url):
+def tryPost(channel, post, sub_setting):
+	url = post['post_url']
+	if existing.contain(url):
 		return
+	album = to_album.get(post)
 	try:
 		album_sender.send_v2(channel, album)
 	except Exception as e:
-		print('tumblr sending fail', album.url, e)
+		print('tumblr sending fail', url, e)
 		with open('tmp_failed_post', 'w') as f:
-			f.write('%s\n\n%s\n\n%s' % (url, str(e), str(album)))
+			f.write('%s\n\n%s\n\n%s\n\n%s' % (url, str(e), str(album), str(post)))
 		return
-	existing.add(album.url)
+	# existing.add(url)
 
 def getPostIds(soup, sub_setting):
 	for url in soup.find_all('a', href=True):
@@ -61,7 +63,8 @@ def run():
 			soup = BeautifulSoup(
 				cached_url.get('https://www.tumblr.com/search/' + tag), 'html.parser')
 			for blog_name, post_id in getPostIds(soup, sub_setting):
-				client.posts(blog_name, id = post_id)
+				post = client.posts(blog_name, id = post_id)
+				tryPost(post)
 				return
 		for people, sub_setting in channel_setting.get('people', {}).items():
 			for post in client.posts(people):
