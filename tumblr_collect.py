@@ -46,7 +46,7 @@ def tryPost(channel, post, sub_setting):
 		with open('tmp_failed_post', 'w') as f:
 			f.write('%s\n\n%s\n\n%s\n\n%s' % (url, str(e), str(album), str(post)))
 		return
-	# existing.add(url)
+	existing.add(url)
 
 def getPostIds(soup, sub_setting):
 	for url in soup.find_all('a', href=True):
@@ -69,7 +69,6 @@ def run():
 			for blog_name, post_id in getPostIds(soup, sub_setting):
 				post = client.posts(blog_name, id = post_id)['posts'][0]
 				tryPost(channel, post, sub_setting)
-			return
 		for people, sub_setting in channel_setting.get('people', {}).items():
 			for post in client.posts(people):
 				tryPost(channel, post, sub_setting)
