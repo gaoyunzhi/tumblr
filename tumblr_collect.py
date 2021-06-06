@@ -2,16 +2,16 @@
 # -*- coding: utf-8 -*-
 
 import yaml
-from telegram_util import log_on_fail
+from telegram_util import log_on_fail, isInt
 from telegram.ext import Updater
 import plain_db
-import cached_url
-from bs4 import BeautifulSoup
 import album_sender
 import time
-import tumblr_to_album
+import to_album
 import pytumblr
-import random
+from bs4 import BeautifulSoup
+import cached_url
+from telegram_util import AlbumResult as Result
 
 with open('credential') as f:
 	credential = yaml.load(f, Loader=yaml.FullLoader)
@@ -26,21 +26,46 @@ debug_group = tele.bot.get_chat(credential['debug_group'])
 client = pytumblr.TumblrRestClient(
     credential['consumer_key'],
     credential['consumer_secret'],
-    credential['oauth_token'],
-    credential['oauth_secret'],
+    credential['token'],
+    credential['token_secret'],
 )
+
+def tryPost(channel, album):
+	if existing.contain(album.url):
+		return
+	try:
+		album_sender.send_v2(channel, album)
+	except Exception as e:
+		print('tumblr sending fail', album.url, e)
+		with open('tmp_failed_post', 'w') as f:
+			f.write('%s\n\n%s\n\n%s' % (url, str(e), str(album)))
+		return
+	existing.add(album.url)
+
+def getPostIds(soup, sub_setting):
+	for url in soup.find_all('a', href=True):
+		if 'tumblr' not in url['href']:
+			continue
+		post_id = url['href'].split('/')[-1]
+		if not isInt(post_id):
+			continue
+		blog_name = url['href'].split('/')[2].split('.')[0]
+		yield blog_name, post_id
 
 @log_on_fail(debug_group)
 def run():
 	sent = False
 	for channel_id, channel_setting in setting.items():
 		channel = tele.bot.get_chat(channel_id)
-		for tag, setting in channel_setting.get('tag', {}).items():
-			print(client.tagged(tag))
-			return
-		for people, setting in channel_setting.get('people', {}).items():
-			print(client.posts(people))
-			return
+		for tag, sub_setting in channel_setting.get('tag', {}).items():
+			soup = BeautifulSoup(
+				cached_url.get('https://www.tumblr.com/search/' + tag), 'html.parser')
+			for blog_name, post_id in getPostIds(soup, sub_setting):
+				client.posts(blog_name, id = post_id)
+				return
+		for people, sub_setting in channel_setting.get('people', {}).items():
+			for post in client.posts(people):
+				tryPost(channel, post, sub_setting)
 		# for page, detail in schedule[:1]:
 		# 	posts = tumblr_scraper.get_posts(page, pages=10)
 		# 	count = 0
