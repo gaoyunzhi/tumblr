@@ -70,7 +70,7 @@ def run():
 				post = client.posts(blog_name, id = post_id)['posts'][0]
 				tryPost(channel, post, sub_setting)
 		for people, sub_setting in channel_setting.get('people', {}).items():
-			for post in client.posts(people):
+			for post in client.posts(people)['posts']:
 				tryPost(channel, post, sub_setting)
 		
 if __name__ == '__main__':
