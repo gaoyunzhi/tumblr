@@ -32,6 +32,8 @@ client = pytumblr.TumblrRestClient(
 
 def tryPost(channel, post, sub_setting):
 	url = post['post_url']
+	if post['note_count'] < 500:
+		return
 	if existing.contain(url):
 		return
 	with open('tmp_post', 'w') as f:
