@@ -69,7 +69,10 @@ def run():
 			soup = BeautifulSoup(
 				cached_url.get('https://www.tumblr.com/search/' + tag), 'html.parser')
 			for blog_name, post_id in getPostIds(soup, sub_setting):
-				post = client.posts(blog_name, id = post_id)['posts'][0]
+				try:
+					post = client.posts(blog_name, id = post_id)['posts'][0]
+				except:
+					continue
 				tryPost(channel, post, sub_setting)
 		for people, sub_setting in channel_setting.get('people', {}).items():
 			for post in client.posts(people)['posts']:
